@@ -55,7 +55,7 @@ def get_max_duration(release_year: int = None, source: str = None, duration_type
 
 
 @app.get("/get_score_count/{plataforma}/{ScoreMedio}/{release_year}")
-def get_score_count(plataforma: str, ScoreMedio: int, release_year:int):
+def get_score_count(plataforma: str, ScoreMedio: float, release_year:int):
     global df
     # Contar el número de veces que se cumple la condición
     cantidad = np.count_nonzero(np.where((df["plataforma"] == plataforma) & (df["ScoreMedio"] >=ScoreMedio) & (df["release_year"] == release_year), True, False))
@@ -103,6 +103,43 @@ def get_actor(source:str, release_year:int):
         return None
     else:
         return actor_count.index[0]
+
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+@app.get("/prod_per_country")
+def prod_per_country(content_type: str, country: str, year: int):
+    # Cargar el archivo CSV en un DataFrame de Pandas
+    global df
+
+    # Filtrar el DataFrame según el tipo de contenido, país y año especificados en los argumentos de la función
+    filtered_df = df[(df['type'] == content_type) & (df['country'] == country) & (df['release_year'] == year)]
+
+    # Agrupar los datos por país, año y tipo de contenido, y contar la cantidad de títulos en cada grupo
+    grouped_df = filtered_df.groupby(['country', 'release_year', 'type']).size().reset_index(name='count')
+
+    # Crear un diccionario que contenga los valores de país, año, cantidad de películas y cantidad de series para los grupos correspondientes
+    result_dict = {'country': country, 'year': year}
+    for _, row in grouped_df.iterrows():
+        result_dict[row['type']] = row['count']
+
+    # Devolver el diccionario como resultado de la función
+    return result_dict
+
+
+@app.get("/get_contents/{rating}")
+def get_contents(rating: str):
+    global df
+    
+    # Filtrar el DataFrame según el rating de audiencia especificado
+    filtered_df = df[df['rating'] == rating]
+    
+    # Contar la cantidad de títulos que cumplen la condición
+    result = len(filtered_df)
+    
+    return result
+
 
 
 
